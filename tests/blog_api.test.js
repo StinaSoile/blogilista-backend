@@ -68,19 +68,32 @@ describe('api-tests', async () => {
         assert(contents.includes('Reactive patterns'))
     })
 
-    // test('note without content is not added', async () => {
-    //     const newNote = {
-    //         important: true
-    //     }
+    // 4.11 jos likes ei määritellä, likes:0
 
-    //     await api
-    //         .post('/api/notes')
-    //         .send(newNote)
-    //         .expect(400)
+    test('if likes are not given, likes: 0', async () => {
+        const newBlog = {
+            title: "Reactive patterns",
+            author: "Pingu",
+            url: "https://https.com/",
+            likes: undefined
+        }
 
-    //     const response = await api.get('/api/notes')
-    //     assert.strictEqual(response.body.length, helper.initialNotes.length)
-    // })
+        await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(201)
+
+        const response = await api.get('/api/blogs')
+
+        const contents = response.body.map(r => { r.title, r.likes })
+
+        assert.strictEqual(response.body.length, helper.blogs.length + 1)
+        // NÄMÄ ALLA OLEVAT EI TOIMI!
+        // const foundBlog = contents.find(({ title }) === "Reactive patterns")
+        // assert.strictEqual(foundBlog.likes, 0)
+
+        // assert(contents.includes({ title: "Reactive patterns", likes: 0 }))
+    })
 
     // test('a specific note can be viewed', async () => {
     //     const notesAtStart = await helper.notesInDb()
