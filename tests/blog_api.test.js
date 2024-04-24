@@ -12,11 +12,6 @@ describe('api-tests', async () => {
     beforeEach(async () => {
         await Blog.deleteMany({})
         await Blog.insertMany(helper.blogs)
-
-        // const blogObjects = helper.blogs
-        //     .map(blog => new Blog(blog))
-        // const promiseArray = blogObjects.map(blog => blog.save())
-        // await Promise.all(promiseArray)
     })
 
     test('blogs returned as json', async () => {
@@ -42,7 +37,6 @@ describe('api-tests', async () => {
             .expect(200)
         assert(blogs.body[0].id && !blogs.body[0]._id)
 
-        // .expect('Content-Type', /application\/json/)
     })
 
     test('a valid blog can be added ', async () => {
@@ -119,19 +113,26 @@ describe('api-tests', async () => {
         assert(!contents.includes(undefined))
     })
 
-    // test('a specific note can be viewed', async () => {
-    //     const notesAtStart = await helper.notesInDb()
+    test('blog can be changed', async () => {
+        const blogsAtStart = await helper.blogsFromDB()
 
-    //     const noteToView = notesAtStart[0]
-
-
-    //     const resultNote = await api
-    //         .get(`/api/notes/${noteToView.id}`)
-    //         .expect(200)
-    //         .expect('Content-Type', /application\/json/)
-
-    //     assert.deepStrictEqual(resultNote.body, noteToView)
-    // })
+        const blogToChange = blogsAtStart[0]
+        const change = {
+            title: "Title",
+            author: "Pingu",
+            url: "https://https.com/",
+            likes: 30
+        }
+        console.log(blogsAtStart)
+        const resultBlog = await api
+            .put(`/api/blogs/${blogToChange.id}`)
+            .send(change)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+        const blogsAtEnd = await helper.blogsFromDB()
+        console.log(blogsAtEnd)
+        assert.deepStrictEqual(resultBlog.body, { ...change, id: blogToChange.id })
+    })
 
     test('blog can be deleted', async () => {
         const blogsAtStart = await helper.blogsFromDB()
