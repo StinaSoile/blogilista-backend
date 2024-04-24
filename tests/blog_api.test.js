@@ -45,33 +45,28 @@ describe('api-tests', async () => {
         // .expect('Content-Type', /application\/json/)
     })
 
-    // test('the first note is a song', async () => {
-    //     const response = await api.get('/api/notes')
+    test('a valid blog can be added ', async () => {
+        const newBlog = {
+            title: "Reactive patterns",
+            author: "Pingu",
+            url: "https://https.com/",
+            likes: 70
+        }
 
-    //     const contents = response.body.map(e => e.content)
-    //     assert(contents.includes('Rati riti ralla.'))
-    // })
+        await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
 
-    // test('a valid note can be added ', async () => {
-    //     const newNote = {
-    //         content: 'async/await simplifies making async calls',
-    //         important: true,
-    //     }
+        const response = await api.get('/api/blogs')
 
-    //     await api
-    //         .post('/api/notes')
-    //         .send(newNote)
-    //         .expect(201)
-    //         .expect('Content-Type', /application\/json/)
+        const contents = response.body.map(r => r.title)
 
-    //     const response = await api.get('/api/notes')
+        assert.strictEqual(response.body.length, helper.blogs.length + 1)
 
-    //     const contents = response.body.map(r => r.content)
-
-    //     assert.strictEqual(response.body.length, helper.initialNotes.length + 1)
-
-    //     assert(contents.includes('async/await simplifies making async calls'))
-    // })
+        assert(contents.includes('Reactive patterns'))
+    })
 
     // test('note without content is not added', async () => {
     //     const newNote = {
