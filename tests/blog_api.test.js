@@ -62,7 +62,6 @@ describe('api-tests', async () => {
         const response = await api.get('/api/blogs')
 
         const contents = response.body.map(r => r.title)
-
         assert.strictEqual(response.body.length, helper.blogs.length + 1)
 
         assert(contents.includes('Reactive patterns'))
@@ -85,14 +84,13 @@ describe('api-tests', async () => {
 
         const response = await api.get('/api/blogs')
 
-        const contents = response.body.map(r => { r.title, r.likes })
+        const contents = response.body.map(r => r.likes)
 
         assert.strictEqual(response.body.length, helper.blogs.length + 1)
         // NÄMÄ ALLA OLEVAT EI TOIMI!
         // const foundBlog = contents.find(({ title }) === "Reactive patterns")
         // assert.strictEqual(foundBlog.likes, 0)
-
-        // assert(contents.includes({ title: "Reactive patterns", likes: 0 }))
+        assert(!contents.includes(undefined))
     })
 
     // test('a specific note can be viewed', async () => {
