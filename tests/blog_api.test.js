@@ -123,14 +123,14 @@ describe('api-tests', async () => {
             url: "https://https.com/",
             likes: 30
         }
-        console.log(blogsAtStart)
+        // console.log(blogsAtStart)
         const resultBlog = await api
             .put(`/api/blogs/${blogToChange.id}`)
             .send(change)
             .expect(200)
             .expect('Content-Type', /application\/json/)
         const blogsAtEnd = await helper.blogsFromDB()
-        console.log(blogsAtEnd)
+        // console.log(blogsAtEnd)
         assert.deepStrictEqual(resultBlog.body, { ...change, id: blogToChange.id })
     })
 
@@ -152,7 +152,9 @@ describe('api-tests', async () => {
 
 
     after(async () => {
-        console.log('closing')
-        await mongoose.connection.close()
+        console.log('not closing')
+        await mongoose.connection.close(true)
+        console.log('after closing')
+
     })
 })
