@@ -133,22 +133,23 @@ describe('api-tests', async () => {
     //     assert.deepStrictEqual(resultNote.body, noteToView)
     // })
 
-    // test('a note can be deleted', async () => {
-    //     const notesAtStart = await helper.notesInDb()
-    //     const noteToDelete = notesAtStart[0]
+    test('blog can be deleted', async () => {
+        const blogsAtStart = await helper.blogsFromDB()
+        const blogToDelete = blogsAtStart[0]
+
+        await api
+            .delete(`/api/blogs/${blogToDelete.id}`)
+            .expect(204)
 
 
-    //     await api
-    //         .delete(`/api/notes/${noteToDelete.id}`)
-    //         .expect(204)
+        const blogsAtEnd = await helper.blogsFromDB()
+        const contents = blogsAtEnd.map(r => r.id)
+        assert(!contents.includes(blogToDelete.id))
 
-    //     const notesAtEnd = await helper.notesInDb()
+        assert.strictEqual(blogsAtEnd.length, helper.blogs.length - 1)
+    })
 
-    //     const contents = notesAtEnd.map(r => r.content)
-    //     assert(!contents.includes(noteToDelete.content))
 
-    //     assert.strictEqual(notesAtEnd.length, helper.initialNotes.length - 1)
-    // })
     after(async () => {
         console.log('closing')
         await mongoose.connection.close()
