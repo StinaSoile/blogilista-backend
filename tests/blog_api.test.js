@@ -19,35 +19,31 @@ describe('api-tests', async () => {
         // await Promise.all(promiseArray)
     })
 
-    // helpoin tapa mutta jätän Promise.all-version muistutukseksi:
-
-    // beforeEach(async () => {
-    //     await Note.deleteMany({})
-
-    //     await Note.insertMany(helper.initialNotes)
-    // })
-
-
-    // 4.8: testit GET-pyynnölle /api/blogs
-    // testaa, että:
-    // palauttaa JSON-muodossa
-    // palauttaa oikean määrän
-    // refaktoroi promiset asynciksi
-    // MUISTA määritellä testausympäristö ym muutokset
-
     test('blogs returned as json', async () => {
-        console.log('entered test')
+        console.log('entered json-test')
         await api
             .get('/api/blogs')
             .expect(200)
             .expect('Content-Type', /application\/json/)
     })
 
-    // test('there are two blogs', async () => {
-    //     const response = await api.get('/api/blogs')
+    test('there are six blogs', async () => {
+        console.log('entered lkm-test')
 
-    //     assert.strictEqual(response.body.length, 2)
-    // })
+        const response = await api.get('/api/blogs')
+
+        assert.strictEqual(response.body.length, 6)
+    })
+
+    test('identification key is named id', async () => {
+        console.log('entered id-test')
+        const blogs = await api
+            .get('/api/blogs')
+            .expect(200)
+        assert(blogs.body[0].id && !blogs.body[0]._id)
+
+        // .expect('Content-Type', /application\/json/)
+    })
 
     // test('the first note is a song', async () => {
     //     const response = await api.get('/api/notes')
