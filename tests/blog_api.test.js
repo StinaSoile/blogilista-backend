@@ -67,7 +67,36 @@ describe('api-tests', async () => {
         assert(contents.includes('Reactive patterns'))
     })
 
-    // 4.11 jos likes ei määritellä, likes:0
+    test('an invalid blog cant be added ', async () => {
+        const newBlog = {
+            title: undefined,
+            author: "Pingu",
+            url: "https://https.com/",
+            likes: 70
+        }
+        const newBlog2 = {
+            title: "Reactive patterns",
+            author: "Pingu",
+            url: undefined,
+            likes: 70
+        }
+        await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(400)
+        const response = await api.get('/api/blogs')
+
+        assert.strictEqual(response.body.length, helper.blogs.length)
+
+        await api
+            .post('/api/blogs')
+            .send(newBlog2)
+            .expect(400)
+
+        assert.strictEqual(response.body.length, helper.blogs.length)
+
+
+    })
 
     test('if likes are not given, likes: 0', async () => {
         const newBlog = {
@@ -87,9 +116,6 @@ describe('api-tests', async () => {
         const contents = response.body.map(r => r.likes)
 
         assert.strictEqual(response.body.length, helper.blogs.length + 1)
-        // NÄMÄ ALLA OLEVAT EI TOIMI!
-        // const foundBlog = contents.find(({ title }) === "Reactive patterns")
-        // assert.strictEqual(foundBlog.likes, 0)
         assert(!contents.includes(undefined))
     })
 
