@@ -7,8 +7,149 @@ const helper = require('./test_helper')
 const Blog = require('../models/blog')
 
 const api = supertest(app)
+const bcrypt = require('bcrypt')
+const User = require('../models/user')
 
-describe('api-tests', async () => {
+//...
+
+describe('api-tests when one user in db', () => {
+    beforeEach(async () => {
+        await User.deleteMany({})
+
+        const passwordHash = await bcrypt.hash('sekret', 10)
+        const user = new User({ username: 'root', passwordHash })
+
+        await user.save()
+    })
+
+    test('creation succeeds with a fresh username', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: 'mluukkai',
+            name: 'Matti Luukkainen',
+            password: 'salainen',
+        }
+
+        await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(201)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length + 1)
+
+        const usernames = usersAtEnd.map(u => u.username)
+        assert(usernames.includes(newUser.username))
+    })
+
+    test('creation fails if username taken', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: 'root',
+            name: 'Superuser',
+            password: 'salainen',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert(result.body.error.includes('expected `username` to be unique'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('creation fails if username length under 3', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: 'ro',
+            name: 'Superuser',
+            password: 'salainen',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert(result.body.error.includes('is shorter than the minimum allowed length'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+    test('creation fails if no username', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: undefined,
+            name: 'Superuser',
+            password: 'salainen',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert(result.body.error.includes('Path `username` is required'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('creation fails if password length under 3', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: 'roo',
+            name: 'Superuser',
+            password: 'ss',
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert(result.body.error.includes('Password is shorter than the minimum allowed length 3'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+
+    test('creation fails if no password', async () => {
+        const usersAtStart = await helper.usersFromDB()
+
+        const newUser = {
+            username: 'roo',
+            name: 'Superuser',
+            password: undefined,
+        }
+
+        const result = await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+            .expect('Content-Type', /application\/json/)
+
+        const usersAtEnd = await helper.usersFromDB()
+        assert(result.body.error.includes('Password is shorter than the minimum allowed length 3'))
+
+        assert.strictEqual(usersAtEnd.length, usersAtStart.length)
+    })
+})
+
+describe('api-tests about blogs', async () => {
     beforeEach(async () => {
         await Blog.deleteMany({})
         await Blog.insertMany(helper.blogs)
@@ -153,7 +294,7 @@ describe('api-tests', async () => {
 
     after(async () => {
         console.log('not closing')
-        await mongoose.connection.close(true)
+        await mongoose.connection.close()
         console.log('after closing')
 
     })
