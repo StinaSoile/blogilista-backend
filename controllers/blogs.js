@@ -1,5 +1,5 @@
 const blogsRouter = require('express').Router()
-const { request, response } = require('../app')
+// const { request, response } = require('../app') // Warning: Accessing non-existent property 'response' of module exports inside circular dependency eli viittaan apissa tänne ja täällä appiin ja se on kiellettyä
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
@@ -21,7 +21,10 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
 
     const body = (request.body)
-    const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+    if (!request.token) {
+        return response.status(401).json({ error: 'token missing' });
+    }
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
     if (!decodedToken.id) {
         return response.status(401).json({ error: 'token invalid' })
     }
