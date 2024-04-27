@@ -2,27 +2,15 @@ const blogsRouter = require('express').Router()
 const { request, response } = require('../app')
 const Blog = require('../models/blog')
 const User = require('../models/user')
-/* 
-4.18:
-Toteuta (osan 4 luvun "Token-perustainen kirjautuminen" tapaan)
-järjestelmän token-perustainen autentikointi
+const jwt = require('jsonwebtoken')
 
-4.19:
-Muuta blogien lisäämistä siten, että se on mahdollista vain, jos
-HTTP POST-pyynnössä on mukana validi token. Tokenin haltija on blogin lisääjä.
-*/4.17:
-Laajenna blogia siten, että blogiin tulee tieto sen lisänneestä käyttäjästä.DONE
-
-Muokkaa blogien lisäystä osan 4 luvun populate tapaan siten, että blogin lisäämisen yhteydessä 
-määritellään blogin lisääjäksi joku järjestelmän tietokannassa olevista käyttäjistä
-    (esim.ensimmäisenä löytyvä). 
-Tässä vaiheessa ei ole väliä kuka käyttäjistä määritellään lisääväksi. 
-Toiminnallisuus viimeistellään tehtävässä 4.19.
-    DONE
-
-Muokkaa kaikkien blogien listausta siten, että blogien yhteydessä näytetään lisääjän tiedot,
-    ja käyttäjien listausta siten että käyttäjien lisäämät blogit ovat näkyvillä DONE
-
+const getTokenFrom = (request) => {
+    const authorization = request.get('authorization')
+    if (authorization && authorization.startsWith('Bearer ')) {
+        return authorization.replace('Bearer ', '')
+    }
+    return null
+}
 
 blogsRouter.get('/', async (request, response) => {
 
@@ -33,8 +21,12 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
 
     const body = (request.body)
+    const decodedToken = jwt.verify(getTokenFrom(request), process.env.SECRET)
+    if (!decodedToken.id) {
+        return response.status(401).json({ error: 'token invalid' })
+    }
+    const user = await User.findById(decodedToken.id)
     if (body.likes === undefined) body.likes = 0
-    const user = await User.findById('662bfd6866f8cfcadc207dcb')
 
     const blog = new Blog({
         title: body.title,
