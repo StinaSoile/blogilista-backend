@@ -13,14 +13,17 @@ blogsRouter.get('/', async (request, response) => {
 blogsRouter.post('/', async (request, response) => {
 
     const body = (request.body)
-    if (!request.token) {
-        return response.status(401).json({ error: 'token missing' });
-    }
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-        return response.status(401).json({ error: 'token invalid' })
-    }
-    const user = await User.findById(decodedToken.id)
+    // if (!request.token) {
+    //     return response.status(401).json({ error: 'token missing' });
+    // }
+    // const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    // if (!decodedToken.id) {
+    //     return response.status(401).json({ error: 'token invalid' })
+    // }
+    // const user = await User.findById(decodedToken.id)
+    const user = request.user
+
+
     if (body.likes === undefined) body.likes = 0
 
     const blog = new Blog({
@@ -54,15 +57,16 @@ blogsRouter.put('/:id', async (request, response) => {
 
 blogsRouter.delete('/:id', async (request, response) => {
     // const body = (request.body)
-    if (!request.token) {
-        return response.status(401).json({ error: 'token missing' });
-    }
+    // if (!request.token) {
+    //     return response.status(401).json({ error: 'token missing' });
+    // }
 
-    const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    if (!decodedToken.id) {
-        return response.status(401).json({ error: 'token invalid' })
-    }
-    const user = await User.findById(decodedToken.id)
+    // const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    // if (!decodedToken.id) {
+    //     return response.status(401).json({ error: 'token invalid' })
+    // }
+    // const user = await User.findById(decodedToken.id)
+    const user = request.user
     const blogi = await Blog.findById(request.params.id)
     if (blogi.user.toString() !== user._id.toString()) {
         return response.status(401).json({ error: 'token invalid' })
