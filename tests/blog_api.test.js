@@ -14,8 +14,6 @@ const { request } = require('node:http')
 let token
 let currUser
 
-//...
-
 describe('api-tests when one user in db', () => {
     beforeEach(async () => {
         await User.deleteMany({})
