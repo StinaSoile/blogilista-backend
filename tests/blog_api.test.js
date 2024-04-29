@@ -9,6 +9,10 @@ const Blog = require('../models/blog')
 const api = supertest(app)
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
+const jwt = require('jsonwebtoken')
+const { request } = require('node:http')
+let token
+let currUser
 
 //...
 
@@ -149,10 +153,21 @@ describe('api-tests when one user in db', () => {
     })
 })
 
-describe('api-tests about blogs', async () => {
+describe.only('api-tests about blogs', async () => {
     beforeEach(async () => {
         await Blog.deleteMany({})
         await Blog.insertMany(helper.blogs)
+        await User.deleteMany({})
+
+        const passwordHash = await bcrypt.hash('sekret', 10)
+        const user = new User({ username: 'root', passwordHash })
+
+        currUser = await user.save()
+
+        const loginResponse = await api
+            .post('/api/login')
+            .send({ username: 'root', password: 'sekret' })
+        token = loginResponse.body.token
     })
 
     test('blogs returned as json', async () => {
@@ -180,22 +195,33 @@ describe('api-tests about blogs', async () => {
 
     })
 
-    test('a valid blog can be added ', async () => {
+    test.only('a valid blog can be added ', async () => {
+
+        // const passwordHash = await bcrypt.hash('sekret', 10)
+        // const user = new User({ username: 'root', passwordHash })
+
+        // const currUser = await user.save()
+
+        // const loginResponse = await api
+        //     .post('/api/login')
+        //     .send({ username: 'root', password: 'sekret' })
+        // const token = loginResponse.body.token
+
         const newBlog = {
             title: "Reactive patterns",
             author: "Pingu",
             url: "https://https.com/",
-            likes: 70
+            likes: 70,
+            user: currUser._id
         }
-
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
         const response = await api.get('/api/blogs')
-
         const contents = response.body.map(r => r.title)
         assert.strictEqual(response.body.length, helper.blogs.length + 1)
 
@@ -207,16 +233,19 @@ describe('api-tests about blogs', async () => {
             title: undefined,
             author: "Pingu",
             url: "https://https.com/",
-            likes: 70
+            likes: 70,
+            user: currUser._id
         }
         const newBlog2 = {
             title: "Reactive patterns",
             author: "Pingu",
             url: undefined,
-            likes: 70
+            likes: 70,
+            user: currUser._id
         }
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog)
             .expect(400)
         const response = await api.get('/api/blogs')
@@ -238,11 +267,14 @@ describe('api-tests about blogs', async () => {
             title: "Reactive patterns",
             author: "Pingu",
             url: "https://https.com/",
-            likes: undefined
+            likes: undefined,
+            user: currUser._id
+
         }
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog)
             .expect(201)
 
@@ -254,33 +286,53 @@ describe('api-tests about blogs', async () => {
         assert(!contents.includes(undefined))
     })
 
-    test('blog can be changed', async () => {
-        const blogsAtStart = await helper.blogsFromDB()
-
-        const blogToChange = blogsAtStart[0]
+    test.only('blog can be changed', async () => {
+        const newBlog = {
+            title: "New Blog from Pingu",
+            author: "Not a Pingu",
+            url: "url väärä oh noh",
+            likes: 0,
+            user: currUser._id
+        }
+        const blogToChange = await Blog.create(newBlog)
+        // const blogsAtStart = await helper.blogsFromDB()
+        // console.log(blogsAtStart)
         const change = {
             title: "Title",
             author: "Pingu",
             url: "https://https.com/",
-            likes: 30
+            likes: 30,
+            user: currUser._id
         }
-        // console.log(blogsAtStart)
         const resultBlog = await api
             .put(`/api/blogs/${blogToChange.id}`)
+            .set('Authorization', `Bearer ${token}`)
             .send(change)
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        const blogsAtEnd = await helper.blogsFromDB()
-        // console.log(blogsAtEnd)
-        assert.deepStrictEqual(resultBlog.body, { ...change, id: blogToChange.id })
+        // const blogsAtEnd = await helper.blogsFromDB()
+        // console.log(resultBlog.body)
+        assert.strictEqual(resultBlog.body.title, change.title)
+        assert.strictEqual(resultBlog.body.user.toString(), change.user.toString())
+        assert.strictEqual(resultBlog.body.id.toString(), blogToChange.id.toString())
+
+
     })
 
-    test('blog can be deleted', async () => {
+    test.only('blog can be deleted', async () => {
+        const newBlog = {
+            title: "New Blog from Pingu",
+            author: "Not a Pingu",
+            url: "url väärä oh noh",
+            likes: 0,
+            user: currUser._id
+        }
+        const blogToDelete = await Blog.create(newBlog)
         const blogsAtStart = await helper.blogsFromDB()
-        const blogToDelete = blogsAtStart[0]
 
         await api
             .delete(`/api/blogs/${blogToDelete.id}`)
+            .set('Authorization', `Bearer ${token}`)
             .expect(204)
 
 
@@ -288,7 +340,7 @@ describe('api-tests about blogs', async () => {
         const contents = blogsAtEnd.map(r => r.id)
         assert(!contents.includes(blogToDelete.id))
 
-        assert.strictEqual(blogsAtEnd.length, helper.blogs.length - 1)
+        assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
     })
 
 

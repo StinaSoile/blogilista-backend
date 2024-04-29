@@ -27,12 +27,16 @@ mongoose.connect(config.MONGODB_URI)
 
 app.use(cors())
 app.use(express.json())
-app.use(middleware.tokenExtractor)
-// app.use(middleware.userExtractor)
-
+// app.use(middleware)
 app.use('/api/login', loginRouter)
 app.use('/api/users', usersRouter)
-app.use('/api/blogs', middleware.userExtractor, blogsRouter)
+
+// app.use(middleware.tokenExtractor)
+// app.use(middleware.userExtractor)
+
+app.use('/api/blogs', blogsRouter)
+// app.use('/api/blogs', middleware.userExtractor, middleware.tokenExtractor, blogsRouter)
+
 app.use(middleware.errorHandler)
 app.use(middleware.unknownEndpoint)
 
