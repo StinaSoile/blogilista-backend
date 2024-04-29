@@ -1,5 +1,4 @@
 const blogsRouter = require('express').Router()
-// const { request, response } = require('../app') // Warning: Accessing non-existent property 'response' of module exports inside circular dependency eli viittaan apissa tänne ja täällä appiin ja se on kiellettyä
 const Blog = require('../models/blog')
 const User = require('../models/user')
 const jwt = require('jsonwebtoken')
@@ -10,7 +9,6 @@ blogsRouter.get('/', async (request, response) => {
     const blogs = await Blog.find({}).populate('user', { username: 1, name: 1 })
     response.json(blogs)
 })
-// middleware.userExtractor, middleware.tokenExtractor,
 blogsRouter.post('/', middleware.userExtractor, async (request, response) => {
     const body = (request.body)
 
@@ -49,16 +47,6 @@ blogsRouter.put('/:id', middleware.userExtractor, async (request, response) => {
 })
 
 blogsRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
-    // const body = (request.body)
-    // if (!request.token) {
-    //     return response.status(401).json({ error: 'token missing' });
-    // }
-
-    // const decodedToken = jwt.verify(request.token, process.env.SECRET)
-    // if (!decodedToken.id) {
-    //     return response.status(401).json({ error: 'token invalid' })
-    // }
-    // const user = await User.findById(decodedToken.id)
     const user = request.user
     const blogi = await Blog.findById(request.params.id)
     if (blogi.user.toString() !== user._id.toString()) {

@@ -217,10 +217,6 @@ describe.only('api-tests about blogs', async () => {
         assert(contents.includes('Reactive patterns'))
     })
 
-
-    /*Tee myös testi, joka varmistaa että uuden blogin lisäys ei onnistu,
-    ja pyyntö palauttaa oikean statuskoodin 401 Unauthorized 
-    jos pyynnön mukana ei ole tokenia.*/
     test.only('a valid blog not added if invalid token', async () => {
         const newBlog = {
             title: "Reactive patterns",
@@ -322,8 +318,6 @@ describe.only('api-tests about blogs', async () => {
             user: currUser._id
         }
         const blogToChange = await Blog.create(newBlog)
-        // const blogsAtStart = await helper.blogsFromDB()
-        // console.log(blogsAtStart)
         const change = {
             title: "Title",
             author: "Pingu",
@@ -337,8 +331,6 @@ describe.only('api-tests about blogs', async () => {
             .send(change)
             .expect(200)
             .expect('Content-Type', /application\/json/)
-        // const blogsAtEnd = await helper.blogsFromDB()
-        // console.log(resultBlog.body)
         assert.strictEqual(resultBlog.body.title, change.title)
         assert.strictEqual(resultBlog.body.user.toString(), change.user.toString())
         assert.strictEqual(resultBlog.body.id.toString(), blogToChange.id.toString())
