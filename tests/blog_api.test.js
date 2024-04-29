@@ -195,18 +195,7 @@ describe.only('api-tests about blogs', async () => {
 
     })
 
-    test.only('a valid blog can be added ', async () => {
-
-        // const passwordHash = await bcrypt.hash('sekret', 10)
-        // const user = new User({ username: 'root', passwordHash })
-
-        // const currUser = await user.save()
-
-        // const loginResponse = await api
-        //     .post('/api/login')
-        //     .send({ username: 'root', password: 'sekret' })
-        // const token = loginResponse.body.token
-
+    test.only('a valid blog can be added if valid token', async () => {
         const newBlog = {
             title: "Reactive patterns",
             author: "Pingu",
@@ -227,6 +216,43 @@ describe.only('api-tests about blogs', async () => {
 
         assert(contents.includes('Reactive patterns'))
     })
+
+
+    /*Tee myös testi, joka varmistaa että uuden blogin lisäys ei onnistu,
+    ja pyyntö palauttaa oikean statuskoodin 401 Unauthorized 
+    jos pyynnön mukana ei ole tokenia.*/
+    test.only('a valid blog not added if invalid token', async () => {
+        const newBlog = {
+            title: "Reactive patterns",
+            author: "Pingu",
+            url: "https://https.com/",
+            likes: 70,
+            user: currUser._id
+        }
+        console.log(token)
+        await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .expect(401)
+
+        await api
+            .post('/api/blogs')
+            .set('Authorization', `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2Vybm`)
+            .send(newBlog)
+            .expect(401)
+
+        await api
+            .post('/api/blogs')
+            .set('Authorization', `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6InJvb3QiLCJpZCI6IjY2MmZhNjgwN2UxMDc2YzI1ZjIwYTMyZCIsImlhdCI6MTcxNDM5OTY2MywiZXhwIjoxNzE0NDAzMjYzfQ.AB2lMO8zyncK1wyRa9q - Zk3mmdMr3mloXTN6xcDPKVA`)
+            .send(newBlog)
+            .expect(401)
+
+        const response = await api.get('/api/blogs')
+        assert.strictEqual(response.body.length, helper.blogs.length)
+
+    })
+
+
 
     test('an invalid blog cant be added ', async () => {
         const newBlog = {
@@ -254,6 +280,7 @@ describe.only('api-tests about blogs', async () => {
 
         await api
             .post('/api/blogs')
+            .set('Authorization', `Bearer ${token}`)
             .send(newBlog2)
             .expect(400)
 
@@ -342,7 +369,6 @@ describe.only('api-tests about blogs', async () => {
 
         assert.strictEqual(blogsAtEnd.length, blogsAtStart.length - 1)
     })
-
 
     after(async () => {
         console.log('not closing')
